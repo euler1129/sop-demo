@@ -282,6 +282,7 @@ button, input, select, textarea { font-family: inherit; }
   padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
   color: var(--tx-light-dim); border: 1px solid transparent;
   transition: all .18s ease; display: flex; align-items: center; gap: 6px;
+  flex: 0 0 auto; white-space: nowrap;   /* 文字必须是整行，绝不能被挤成两行 */
 }
 .vtab:hover { color: var(--tx-light); background: rgba(255, 255, 255, .06); }
 .vtab.active {
@@ -289,9 +290,9 @@ button, input, select, textarea { font-family: inherit; }
   border-color: rgba(0, 163, 196, .5);
   box-shadow: 0 3px 12px rgba(22, 104, 220, .3);
 }
-.vtab svg { width: 14px; height: 14px; }
+.vtab svg { width: 14px; height: 14px; flex: none; }
 
-.canvas-tools { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.canvas-tools { margin-left: auto; display: flex; align-items: center; gap: 6px; flex: none; }
 .icon-btn {
   width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center;
   border: 1px solid var(--bd-soft); background: rgba(255, 255, 255, .05);
@@ -327,10 +328,22 @@ button, input, select, textarea { font-family: inherit; }
   .canvas-body { scrollbar-width: auto; scrollbar-color: rgba(15, 58, 120, .45) rgba(15, 58, 120, .07); }
 }
 
-/* 画布操作提示：拖拽/缩放这些操作没有按钮，必须写在界面上才有人用 */
+/* 画布操作提示：拖拽/缩放这些操作没有按钮，必须写在界面上才有人用。
+   它是最低优先级：空间不够时先被裁掉，页签与右侧工具按钮绝不让位。 */
 .canvas-hint {
-  margin-left: 10px; font-size: 11.5px; color: #6b7c93; white-space: nowrap;
-  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: 10px; font-size: 11.5px; color: #6b7c93;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 0 1 auto; min-width: 0;
+}
+
+/* 窄窗口（画布区 < ~700px）：页签退化成纯图标（保留 title 悬浮说明），
+   否则「页签 + 操作提示 + 5 个工具按钮」挤不下，导出按钮会被推出屏幕 */
+@media (max-width: 1280px) {
+  .canvas-hint { display: none; }
+}
+@media (max-width: 1180px) {
+  .vtab { padding: 6px 10px; gap: 0; }
+  .vtab-tx { display: none; }
 }
 
 /* 拖拽平移：内容溢出时给抓手光标 */
@@ -682,19 +695,19 @@ button, input, select, textarea { font-family: inherit; }
     <!-- 中：画布 -->
     <main class="canvas-wrap">
       <div class="view-tabs">
-        <div class="vtab active" data-view="swimlane">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>泳道流程图
+        <div class="vtab active" data-view="swimlane" title="泳道流程图">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg><span class="vtab-tx">泳道流程图</span>
         </div>
-        <div class="vtab" data-view="bpmn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="3"/><rect x="11" y="8" width="8" height="8" rx="1"/><path d="M8 12h3"/></svg>BPMN 2.0
+        <div class="vtab" data-view="bpmn" title="BPMN 2.0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="3"/><rect x="11" y="8" width="8" height="8" rx="1"/><path d="M8 12h3"/></svg><span class="vtab-tx">BPMN 2.0</span>
         </div>
-        <div class="vtab" data-view="vc">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="9" width="5" height="6" rx="1"/><rect x="9.5" y="9" width="5" height="6" rx="1"/><rect x="17" y="9" width="5" height="6" rx="1"/><path d="M7 12h2.5M14.5 12H17"/></svg>价值链图
+        <div class="vtab" data-view="vc" title="价值链图">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="9" width="5" height="6" rx="1"/><rect x="9.5" y="9" width="5" height="6" rx="1"/><rect x="17" y="9" width="5" height="6" rx="1"/><path d="M7 12h2.5M14.5 12H17"/></svg><span class="vtab-tx">价值链图</span>
         </div>
-        <div class="vtab" data-view="table">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M10 4v16"/></svg>资产表格
+        <div class="vtab" data-view="table" title="资产表格">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M10 4v16"/></svg><span class="vtab-tx">资产表格</span>
         </div>
-        <span class="canvas-hint" title="大图超出画面时：在空白处按住左键拖动即可平移；Ctrl/⌘ + 滚轮缩放；Alt + 滚轮左右平移">空白处拖拽可平移 · Ctrl+滚轮缩放 · ⤢ 适应窗口</span>
+        <span class="canvas-hint" title="大图超出画面时：在空白处按住左键拖动即可平移；Ctrl/⌘ + 滚轮缩放；Alt + 滚轮左右平移">拖拽平移 · Ctrl+滚轮缩放</span>
         <div class="canvas-tools">
           <button class="icon-btn" id="btn-zoom-out" title="缩小">−</button>
           <button class="icon-btn" id="btn-zoom-in" title="放大">+</button>
@@ -2568,9 +2581,32 @@ window.SOP_SAMPLES = {"version":"1.0","items":[{"id":"jigang","kind":"xlsx","nam
 
   render.valueChain = function (asset, host) {
     var stages = asset.stages.length ? asset.stages : [{ id: 'st_0', name: '流程主体' }];
-    var CW = 236, CH = 132, GAP = 58, TOP = 92, LEFTX = 40;
-    var W = LEFTX + stages.length * (CW + GAP) + 40;
-    var H = TOP + CH + 150;
+    var CW = 236, CH = 132, GAP = 58, ROW_GAP = 78, TOP = 92, LEFTX = 40, LANE_H = 24;
+
+    // 每行放几张卡，按画布「可视宽度」算：宽屏一行铺完（原样），窄屏自动折行。
+    // 之前永远横向铺开，7 个环节宽 2138px，画布只有 550px，后面的环节只能跑到屏幕外。
+    // 注意画布是用 CSS zoom 缩放的，pane.clientWidth 量到的是「缩放坐标系」里的宽度
+    // （= 可视宽度 / zoom），必须乘回去，否则折行列数会随缩放来回跳。
+    var paneZoom = parseFloat(host && host.style ? host.style.zoom : 1) || 1;
+    var paneW = ((host && host.clientWidth) || 1200) * paneZoom;
+    var perRow = Math.max(1, Math.floor((paneW - LEFTX - 40 + GAP) / (CW + GAP)));
+    if (perRow > stages.length) perRow = stages.length;
+    var rows = Math.ceil(stages.length / perRow);
+    var W = LEFTX + (perRow - 1) * (CW + GAP) + CW + 40;
+
+    // 底部「角色参与分布」比卡片网格更宽时，画布宽度要跟着它走，
+    // 否则条形的「N 个节点」会被 SVG 视口裁掉（折成一列时最容易踩到）。
+    var laneCounts = asset.lanes.map(function (l) {
+      return asset.nodes.filter(function (n) { return n.laneId === l.id; }).length;
+    });
+    var barMax = 40;
+    laneCounts.forEach(function (c) { barMax = Math.max(barMax, Math.max(40, c * 26)); });
+    W = Math.max(W, LEFTX + 130 + barMax + 56);
+    // 底部「角色参与分布」是按泳道逐行铺开的，画布高度必须跟着行数与泳道数走。
+    // 原来写死 TOP+CH+150(=374)：只要泳道超过 4 条，最后几行就被 SVG 视口裁掉，
+    // 表现为「条形图画到一半没了」。
+    var Y_LANES = TOP + rows * (CH + ROW_GAP) - ROW_GAP + 44;
+    var H = Y_LANES + 30 + Math.max(1, asset.lanes.length) * LANE_H;
     var s = [];
 
     s.push('<svg class="diagram-svg" xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">');
@@ -2582,7 +2618,9 @@ window.SOP_SAMPLES = {"version":"1.0","items":[{"id":"jigang","kind":"xlsx","nam
       asset.stats.nodeCount + ' 个操作节点 · ' + asset.stats.laneCount + ' 个角色泳道</text>');
 
     stages.forEach(function (st, i) {
-      var x = LEFTX + i * (CW + GAP);
+      var row = Math.floor(i / perRow), col = i % perRow;
+      var x = LEFTX + col * (CW + GAP);
+      var y = TOP + row * (CH + ROW_GAP);
       var ns = asset.nodes.filter(function (n) { return n.stageId === st.id || n.stage === st.name; });
       var roles = [];
       ns.forEach(function (n) { if (roles.indexOf(n.role) < 0) roles.push(n.role); });
@@ -2592,32 +2630,40 @@ window.SOP_SAMPLES = {"version":"1.0","items":[{"id":"jigang","kind":"xlsx","nam
       var excCount = ns.filter(function (n) { return n.hasException; }).length;
 
       s.push('<g class="nd node-grow" data-stage="' + st.id + '" style="animation-delay:' + (i * 60) + 'ms">');
-      s.push('<rect x="' + x + '" y="' + TOP + '" width="' + CW + '" height="' + CH + '" rx="12" fill="#fff" stroke="#c9d4e4" stroke-width="1.2"/>');
-      s.push('<rect x="' + x + '" y="' + TOP + '" width="' + CW + '" height="34" rx="12" fill="url(#vcg)"/>');
-      s.push('<rect x="' + x + '" y="' + (TOP + 22) + '" width="' + CW + '" height="12" fill="url(#vcg)"/>');
+      s.push('<rect x="' + x + '" y="' + y + '" width="' + CW + '" height="' + CH + '" rx="12" fill="#fff" stroke="#c9d4e4" stroke-width="1.2"/>');
+      s.push('<rect x="' + x + '" y="' + y + '" width="' + CW + '" height="34" rx="12" fill="url(#vcg)"/>');
+      s.push('<rect x="' + x + '" y="' + (y + 22) + '" width="' + CW + '" height="12" fill="url(#vcg)"/>');
       var t = wrap(st.name, 12);
-      s.push('<text x="' + (x + 14) + '" y="' + (TOP + 22) + '" font-size="13" font-weight="600" fill="#fff">' + esc(t[0]) + '</text>');
-      s.push('<text x="' + (x + CW - 12) + '" y="' + (TOP + 22) + '" font-size="11" fill="#dbeafe" text-anchor="end">' + (i + 1) + '/' + stages.length + '</text>');
+      s.push('<text x="' + (x + 14) + '" y="' + (y + 22) + '" font-size="13" font-weight="600" fill="#fff">' + esc(t[0]) + '</text>');
+      s.push('<text x="' + (x + CW - 12) + '" y="' + (y + 22) + '" font-size="11" fill="#dbeafe" text-anchor="end">' + (i + 1) + '/' + stages.length + '</text>');
 
-      s.push('<text x="' + (x + 14) + '" y="' + (TOP + 56) + '" font-size="11.5" fill="#374151">节点 <tspan font-weight="600" fill="#0A3D91">' + ns.length + '</tspan> 个</text>');
-      s.push('<text x="' + (x + 14) + '" y="' + (TOP + 74) + '" font-size="11.5" fill="#374151">角色 <tspan font-weight="600" fill="#0A3D91">' + roles.length + '</tspan> 个</text>');
-      s.push('<text x="' + (x + 14) + '" y="' + (TOP + 92) + '" font-size="11" fill="#6B7280">' + esc(wrap(roles.join('、'), 15)[0] || '—') + '</text>');
-      s.push('<text x="' + (x + 14) + '" y="' + (TOP + 112) + '" font-size="11" fill="' + (sys.length ? '#00A3C4' : '#F5222D') + '">' + esc(wrap(sys.join('、'), 15)[0] || '系统未标注') + '</text>');
-      if (excCount) s.push('<text x="' + (x + CW - 12) + '" y="' + (TOP + 92) + '" font-size="10.5" fill="#F5222D" text-anchor="end">异常 ' + excCount + '</text>');
-      if (feeCount) s.push('<text x="' + (x + CW - 12) + '" y="' + (TOP + 112) + '" font-size="10.5" fill="#FAAD14" text-anchor="end">计费 ' + feeCount + '</text>');
+      s.push('<text x="' + (x + 14) + '" y="' + (y + 56) + '" font-size="11.5" fill="#374151">节点 <tspan font-weight="600" fill="#0A3D91">' + ns.length + '</tspan> 个</text>');
+      s.push('<text x="' + (x + 14) + '" y="' + (y + 74) + '" font-size="11.5" fill="#374151">角色 <tspan font-weight="600" fill="#0A3D91">' + roles.length + '</tspan> 个</text>');
+      s.push('<text x="' + (x + 14) + '" y="' + (y + 92) + '" font-size="11" fill="#6B7280">' + esc(wrap(roles.join('、'), 15)[0] || '—') + '</text>');
+      s.push('<text x="' + (x + 14) + '" y="' + (y + 112) + '" font-size="11" fill="' + (sys.length ? '#00A3C4' : '#F5222D') + '">' + esc(wrap(sys.join('、'), 15)[0] || '系统未标注') + '</text>');
+      if (excCount) s.push('<text x="' + (x + CW - 12) + '" y="' + (y + 92) + '" font-size="10.5" fill="#F5222D" text-anchor="end">异常 ' + excCount + '</text>');
+      if (feeCount) s.push('<text x="' + (x + CW - 12) + '" y="' + (y + 112) + '" font-size="10.5" fill="#FAAD14" text-anchor="end">计费 ' + feeCount + '</text>');
       s.push('</g>');
 
       if (i + 1 < stages.length) {
-        s.push('<path d="M' + (x + CW) + ',' + (TOP + CH / 2) + ' L' + (x + CW + GAP - 4) + ',' + (TOP + CH / 2) +
-          '" stroke="#1668DC" stroke-width="2" fill="none" marker-end="url(#vcw)"/>');
+        if (col + 1 < perRow) {
+          // 同一行：横向箭头
+          s.push('<path d="M' + (x + CW) + ',' + (y + CH / 2) + ' L' + (x + CW + GAP - 4) + ',' + (y + CH / 2) +
+            '" stroke="#1668DC" stroke-width="2" fill="none" marker-end="url(#vcw)"/>');
+        } else {
+          // 行末折到下一行首卡：右伸 → 落到行间隙 → 折回左侧 → 从上方进入
+          var xR = x + CW + 24, yGap = y + CH + ROW_GAP / 2, xC = LEFTX + CW / 2;
+          s.push('<path d="M' + (x + CW) + ',' + (y + CH / 2) + ' H' + xR + ' V' + yGap + ' H' + xC +
+            ' V' + (y + CH + ROW_GAP - 8) + '" stroke="#1668DC" stroke-width="2" fill="none" marker-end="url(#vcw)"/>');
+        }
       }
     });
 
     // 底部：主链路角色参与热力
-    var y2 = TOP + CH + 44;
+    var y2 = Y_LANES;
     s.push('<text x="' + LEFTX + '" y="' + (y2 - 12) + '" font-size="13" font-weight="600" fill="#0A3D91">角色参与分布</text>');
     asset.lanes.forEach(function (l, i) {
-      var cnt = asset.nodes.filter(function (n) { return n.laneId === l.id; }).length;
+      var cnt = laneCounts[i];
       var w = Math.max(40, cnt * 26);
       s.push('<text x="' + LEFTX + '" y="' + (y2 + 18 + i * 24) + '" font-size="11.5" fill="#374151">' + esc(l.name) + '</text>');
       s.push('<rect x="' + (LEFTX + 130) + '" y="' + (y2 + 7 + i * 24) + '" width="' + w + '" height="14" rx="4" fill="#1668DC" opacity="0.75"/>');
@@ -3345,7 +3391,10 @@ window.SOP_SAMPLES = {"version":"1.0","items":[{"id":"jigang","kind":"xlsx","nam
     selected: null,
     handles: {},
     diag: null,
-    desens: false
+    desens: false,
+    // 自动适应窗口：换视图 / 换资产 / 改窗口大小时自动把整张图缩进可视区。
+    // 用户一旦手动缩放（按钮或 Ctrl+滚轮）就置 false，不再抢他的缩放。
+    autoFit: true
   };
 
   /* ---------------- 脱敏（对外演示 / 公网发布用） ----------------
@@ -3442,8 +3491,11 @@ window.SOP_SAMPLES = {"version":"1.0","items":[{"id":"jigang","kind":"xlsx","nam
   function setAsset(asset) {
     state.asset = asset;
     state.selected = null;
+    state.autoFit = true;          // 换了资产，重新贴窗口
+    if (!fitView()) state.zoom = 1;
     $('empty-state').style.display = 'none';
     renderAll();
+    fitToWindow();
     runDiagnose();
   }
 
@@ -3540,20 +3592,38 @@ window.SOP_SAMPLES = {"version":"1.0","items":[{"id":"jigang","kind":"xlsx","nam
     var prevW = body.scrollWidth || 1, prevH = body.scrollHeight || 1;
     var cx = (body.scrollLeft + body.clientWidth / 2) / prevW;
     var cy = (body.scrollTop + body.clientHeight / 2) / prevH;
-    state.zoom = Math.max(0.4, Math.min(2, Math.round(z * 100) / 100));
+    // 下限放到 0.1：BPMN 最宽可到 5700px，0.4 的下限会让「适应窗口」永远适不上
+    state.zoom = Math.max(0.1, Math.min(2, Math.round(z * 100) / 100));
     renderView(currentAsset());
     body.scrollLeft = cx * body.scrollWidth - body.clientWidth / 2;
     body.scrollTop = cy * body.scrollHeight - body.clientHeight / 2;
   }
 
+  // 用户主动缩放：关掉自动适应，别再抢他的缩放级别
+  function userZoom(z) {
+    state.autoFit = false;
+    setZoom(z);
+  }
+
   // 适应窗口：按内容真实尺寸算缩放比，整张图一次看全
   function zoomFit() {
     var body = canvasBody();
+    if (!body) return;
     setZoom(1);
     var z = Math.min(body.clientWidth / (body.scrollWidth || 1), body.clientHeight / (body.scrollHeight || 1));
-    setZoom(z * 0.98);
+    setZoom(Math.min(1, z * 0.98));
     body.scrollLeft = 0;
     body.scrollTop = 0;
+  }
+
+  // 哪些视图「自动贴窗口」：只有价值链图。
+  // 它本来就该在一屏里讲完端到端；泳道图/BPMN 是「大图 + 拖拽平移」的既有交互，
+  // 首次进来保持 100% 可读，需要看全时点 ⤢（或 Ctrl+滚轮）。
+  function fitView() { return state.view === 'vc'; }
+
+  function fitToWindow() {
+    if (!state.asset || !fitView()) return;
+    zoomFit();
   }
 
   function enableCanvasPan() {
@@ -3590,14 +3660,21 @@ window.SOP_SAMPLES = {"version":"1.0","items":[{"id":"jigang","kind":"xlsx","nam
     body.addEventListener('wheel', function (e) {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        setZoom(state.zoom + (e.deltaY < 0 ? 0.1 : -0.1));
+        userZoom(state.zoom + (e.deltaY < 0 ? 0.1 : -0.1));
       } else if (e.altKey) {
         e.preventDefault();
         body.scrollLeft += e.deltaY;
       }
     }, { passive: false });
 
-    window.addEventListener('resize', updatePannable);
+    window.addEventListener('resize', function () {
+      if (state.autoFit) {
+        fitToWindow();                    // 窗口变了，重新贴一次窗口
+      } else if (state.view === 'vc') {
+        renderView(currentAsset());       // 价值链图按画布宽度折行，宽度变了必须重排
+      }
+      updatePannable();
+    });
   }
 
   function bindNodeClick(pane, mapper) {
@@ -3722,7 +3799,11 @@ window.SOP_SAMPLES = {"version":"1.0","items":[{"id":"jigang","kind":"xlsx","nam
     state.view = v;
     document.querySelectorAll('.vtab').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-view') === v); });
     if (!state.asset) return;
+    state.autoFit = true;
+    // 表格是长列表、泳道/BPMN 靠平移缩放看细节：沿用价值链图的适应比例会小到没法读，回 100%
+    if (!fitView()) state.zoom = 1;
     renderView(currentAsset());
+    fitToWindow();                               // 换视图先贴一次窗口：价值链/BPMN 都远宽于画布，不贴就有内容在屏外
     canvasBody().scrollLeft = 0;                 // 换视图回到左上角，避免停在上一张图的偏移上
     canvasBody().scrollTop = 0;
   }
@@ -3921,9 +4002,9 @@ window.SOP_SAMPLES = {"version":"1.0","items":[{"id":"jigang","kind":"xlsx","nam
       renderAll();
     });
 
-    $('btn-zoom-in').addEventListener('click', function () { setZoom(state.zoom + 0.1); });
-    $('btn-zoom-out').addEventListener('click', function () { setZoom(state.zoom - 0.1); });
-    $('btn-zoom-fit').addEventListener('click', zoomFit);
+    $('btn-zoom-in').addEventListener('click', function () { userZoom(state.zoom + 0.1); });
+    $('btn-zoom-out').addEventListener('click', function () { userZoom(state.zoom - 0.1); });
+    $('btn-zoom-fit').addEventListener('click', function () { state.autoFit = true; zoomFit(); });
     $('btn-export-svg').addEventListener('click', exportSvg);
     $('btn-export-png').addEventListener('click', exportPng);
     $('btn-export-bpmn').addEventListener('click', exportBpmn);

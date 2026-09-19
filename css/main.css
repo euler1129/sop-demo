@@ -273,6 +273,7 @@ button, input, select, textarea { font-family: inherit; }
   padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
   color: var(--tx-light-dim); border: 1px solid transparent;
   transition: all .18s ease; display: flex; align-items: center; gap: 6px;
+  flex: 0 0 auto; white-space: nowrap;   /* 文字必须是整行，绝不能被挤成两行 */
 }
 .vtab:hover { color: var(--tx-light); background: rgba(255, 255, 255, .06); }
 .vtab.active {
@@ -280,9 +281,9 @@ button, input, select, textarea { font-family: inherit; }
   border-color: rgba(0, 163, 196, .5);
   box-shadow: 0 3px 12px rgba(22, 104, 220, .3);
 }
-.vtab svg { width: 14px; height: 14px; }
+.vtab svg { width: 14px; height: 14px; flex: none; }
 
-.canvas-tools { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.canvas-tools { margin-left: auto; display: flex; align-items: center; gap: 6px; flex: none; }
 .icon-btn {
   width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center;
   border: 1px solid var(--bd-soft); background: rgba(255, 255, 255, .05);
@@ -318,10 +319,22 @@ button, input, select, textarea { font-family: inherit; }
   .canvas-body { scrollbar-width: auto; scrollbar-color: rgba(15, 58, 120, .45) rgba(15, 58, 120, .07); }
 }
 
-/* 画布操作提示：拖拽/缩放这些操作没有按钮，必须写在界面上才有人用 */
+/* 画布操作提示：拖拽/缩放这些操作没有按钮，必须写在界面上才有人用。
+   它是最低优先级：空间不够时先被裁掉，页签与右侧工具按钮绝不让位。 */
 .canvas-hint {
-  margin-left: 10px; font-size: 11.5px; color: #6b7c93; white-space: nowrap;
-  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: 10px; font-size: 11.5px; color: #6b7c93;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 0 1 auto; min-width: 0;
+}
+
+/* 窄窗口（画布区 < ~700px）：页签退化成纯图标（保留 title 悬浮说明），
+   否则「页签 + 操作提示 + 5 个工具按钮」挤不下，导出按钮会被推出屏幕 */
+@media (max-width: 1280px) {
+  .canvas-hint { display: none; }
+}
+@media (max-width: 1180px) {
+  .vtab { padding: 6px 10px; gap: 0; }
+  .vtab-tx { display: none; }
 }
 
 /* 拖拽平移：内容溢出时给抓手光标 */

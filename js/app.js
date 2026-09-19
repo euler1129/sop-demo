@@ -11,7 +11,10 @@
     selected: null,
     handles: {},
     diag: null,
-    desens: false
+    desens: false,
+    // 自动适应窗口：换视图 / 换资产 / 改窗口大小时自动把整张图缩进可视区。
+    // 用户一旦手动缩放（按钮或 Ctrl+滚轮）就置 false，不再抢他的缩放。
+    autoFit: true
   };
 
   /* ---------------- 脱敏（对外演示 / 公网发布用） ----------------
@@ -108,8 +111,11 @@
   function setAsset(asset) {
     state.asset = asset;
     state.selected = null;
+    state.autoFit = true;          // 换了资产，重新贴窗口
+    if (!fitView()) state.zoom = 1;
     $('empty-state').style.display = 'none';
     renderAll();
+    fitToWindow();
     runDiagnose();
   }
 
@@ -206,20 +212,38 @@
     var prevW = body.scrollWidth || 1, prevH = body.scrollHeight || 1;
     var cx = (body.scrollLeft + body.clientWidth / 2) / prevW;
     var cy = (body.scrollTop + body.clientHeight / 2) / prevH;
-    state.zoom = Math.max(0.4, Math.min(2, Math.round(z * 100) / 100));
+    // 下限放到 0.1：BPMN 最宽可到 5700px，0.4 的下限会让「适应窗口」永远适不上
+    state.zoom = Math.max(0.1, Math.min(2, Math.round(z * 100) / 100));
     renderView(currentAsset());
     body.scrollLeft = cx * body.scrollWidth - body.clientWidth / 2;
     body.scrollTop = cy * body.scrollHeight - body.clientHeight / 2;
   }
 
+  // 用户主动缩放：关掉自动适应，别再抢他的缩放级别
+  function userZoom(z) {
+    state.autoFit = false;
+    setZoom(z);
+  }
+
   // 适应窗口：按内容真实尺寸算缩放比，整张图一次看全
   function zoomFit() {
     var body = canvasBody();
+    if (!body) return;
     setZoom(1);
     var z = Math.min(body.clientWidth / (body.scrollWidth || 1), body.clientHeight / (body.scrollHeight || 1));
-    setZoom(z * 0.98);
+    setZoom(Math.min(1, z * 0.98));
     body.scrollLeft = 0;
     body.scrollTop = 0;
+  }
+
+  // 哪些视图「自动贴窗口」：只有价值链图。
+  // 它本来就该在一屏里讲完端到端；泳道图/BPMN 是「大图 + 拖拽平移」的既有交互，
+  // 首次进来保持 100% 可读，需要看全时点 ⤢（或 Ctrl+滚轮）。
+  function fitView() { return state.view === 'vc'; }
+
+  function fitToWindow() {
+    if (!state.asset || !fitView()) return;
+    zoomFit();
   }
 
   function enableCanvasPan() {
@@ -256,14 +280,21 @@
     body.addEventListener('wheel', function (e) {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
-        setZoom(state.zoom + (e.deltaY < 0 ? 0.1 : -0.1));
+        userZoom(state.zoom + (e.deltaY < 0 ? 0.1 : -0.1));
       } else if (e.altKey) {
         e.preventDefault();
         body.scrollLeft += e.deltaY;
       }
     }, { passive: false });
 
-    window.addEventListener('resize', updatePannable);
+    window.addEventListener('resize', function () {
+      if (state.autoFit) {
+        fitToWindow();                    // 窗口变了，重新贴一次窗口
+      } else if (state.view === 'vc') {
+        renderView(currentAsset());       // 价值链图按画布宽度折行，宽度变了必须重排
+      }
+      updatePannable();
+    });
   }
 
   function bindNodeClick(pane, mapper) {
@@ -388,7 +419,11 @@
     state.view = v;
     document.querySelectorAll('.vtab').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-view') === v); });
     if (!state.asset) return;
+    state.autoFit = true;
+    // 表格是长列表、泳道/BPMN 靠平移缩放看细节：沿用价值链图的适应比例会小到没法读，回 100%
+    if (!fitView()) state.zoom = 1;
     renderView(currentAsset());
+    fitToWindow();                               // 换视图先贴一次窗口：价值链/BPMN 都远宽于画布，不贴就有内容在屏外
     canvasBody().scrollLeft = 0;                 // 换视图回到左上角，避免停在上一张图的偏移上
     canvasBody().scrollTop = 0;
   }
@@ -587,9 +622,9 @@
       renderAll();
     });
 
-    $('btn-zoom-in').addEventListener('click', function () { setZoom(state.zoom + 0.1); });
-    $('btn-zoom-out').addEventListener('click', function () { setZoom(state.zoom - 0.1); });
-    $('btn-zoom-fit').addEventListener('click', zoomFit);
+    $('btn-zoom-in').addEventListener('click', function () { userZoom(state.zoom + 0.1); });
+    $('btn-zoom-out').addEventListener('click', function () { userZoom(state.zoom - 0.1); });
+    $('btn-zoom-fit').addEventListener('click', function () { state.autoFit = true; zoomFit(); });
     $('btn-export-svg').addEventListener('click', exportSvg);
     $('btn-export-png').addEventListener('click', exportPng);
     $('btn-export-bpmn').addEventListener('click', exportBpmn);

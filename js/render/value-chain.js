@@ -14,9 +14,32 @@
 
   render.valueChain = function (asset, host) {
     var stages = asset.stages.length ? asset.stages : [{ id: 'st_0', name: '流程主体' }];
-    var CW = 236, CH = 132, GAP = 58, TOP = 92, LEFTX = 40;
-    var W = LEFTX + stages.length * (CW + GAP) + 40;
-    var H = TOP + CH + 150;
+    var CW = 236, CH = 132, GAP = 58, ROW_GAP = 78, TOP = 92, LEFTX = 40, LANE_H = 24;
+
+    // 每行放几张卡，按画布「可视宽度」算：宽屏一行铺完（原样），窄屏自动折行。
+    // 之前永远横向铺开，7 个环节宽 2138px，画布只有 550px，后面的环节只能跑到屏幕外。
+    // 注意画布是用 CSS zoom 缩放的，pane.clientWidth 量到的是「缩放坐标系」里的宽度
+    // （= 可视宽度 / zoom），必须乘回去，否则折行列数会随缩放来回跳。
+    var paneZoom = parseFloat(host && host.style ? host.style.zoom : 1) || 1;
+    var paneW = ((host && host.clientWidth) || 1200) * paneZoom;
+    var perRow = Math.max(1, Math.floor((paneW - LEFTX - 40 + GAP) / (CW + GAP)));
+    if (perRow > stages.length) perRow = stages.length;
+    var rows = Math.ceil(stages.length / perRow);
+    var W = LEFTX + (perRow - 1) * (CW + GAP) + CW + 40;
+
+    // 底部「角色参与分布」比卡片网格更宽时，画布宽度要跟着它走，
+    // 否则条形的「N 个节点」会被 SVG 视口裁掉（折成一列时最容易踩到）。
+    var laneCounts = asset.lanes.map(function (l) {
+      return asset.nodes.filter(function (n) { return n.laneId === l.id; }).length;
+    });
+    var barMax = 40;
+    laneCounts.forEach(function (c) { barMax = Math.max(barMax, Math.max(40, c * 26)); });
+    W = Math.max(W, LEFTX + 130 + barMax + 56);
+    // 底部「角色参与分布」是按泳道逐行铺开的，画布高度必须跟着行数与泳道数走。
+    // 原来写死 TOP+CH+150(=374)：只要泳道超过 4 条，最后几行就被 SVG 视口裁掉，
+    // 表现为「条形图画到一半没了」。
+    var Y_LANES = TOP + rows * (CH + ROW_GAP) - ROW_GAP + 44;
+    var H = Y_LANES + 30 + Math.max(1, asset.lanes.length) * LANE_H;
     var s = [];
 
     s.push('<svg class="diagram-svg" xmlns="http://www.w3.org/2000/svg" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '">');
@@ -28,7 +51,9 @@
       asset.stats.nodeCount + ' 个操作节点 · ' + asset.stats.laneCount + ' 个角色泳道</text>');
 
     stages.forEach(function (st, i) {
-      var x = LEFTX + i * (CW + GAP);
+      var row = Math.floor(i / perRow), col = i % perRow;
+      var x = LEFTX + col * (CW + GAP);
+      var y = TOP + row * (CH + ROW_GAP);
       var ns = asset.nodes.filter(function (n) { return n.stageId === st.id || n.stage === st.name; });
       var roles = [];
       ns.forEach(function (n) { if (roles.indexOf(n.role) < 0) roles.push(n.role); });
@@ -38,32 +63,40 @@
       var excCount = ns.filter(function (n) { return n.hasException; }).length;
 
       s.push('<g class="nd node-grow" data-stage="' + st.id + '" style="animation-delay:' + (i * 60) + 'ms">');
-      s.push('<rect x="' + x + '" y="' + TOP + '" width="' + CW + '" height="' + CH + '" rx="12" fill="#fff" stroke="#c9d4e4" stroke-width="1.2"/>');
-      s.push('<rect x="' + x + '" y="' + TOP + '" width="' + CW + '" height="34" rx="12" fill="url(#vcg)"/>');
-      s.push('<rect x="' + x + '" y="' + (TOP + 22) + '" width="' + CW + '" height="12" fill="url(#vcg)"/>');
+      s.push('<rect x="' + x + '" y="' + y + '" width="' + CW + '" height="' + CH + '" rx="12" fill="#fff" stroke="#c9d4e4" stroke-width="1.2"/>');
+      s.push('<rect x="' + x + '" y="' + y + '" width="' + CW + '" height="34" rx="12" fill="url(#vcg)"/>');
+      s.push('<rect x="' + x + '" y="' + (y + 22) + '" width="' + CW + '" height="12" fill="url(#vcg)"/>');
       var t = wrap(st.name, 12);
-      s.push('<text x="' + (x + 14) + '" y="' + (TOP + 22) + '" font-size="13" font-weight="600" fill="#fff">' + esc(t[0]) + '</text>');
-      s.push('<text x="' + (x + CW - 12) + '" y="' + (TOP + 22) + '" font-size="11" fill="#dbeafe" text-anchor="end">' + (i + 1) + '/' + stages.length + '</text>');
+      s.push('<text x="' + (x + 14) + '" y="' + (y + 22) + '" font-size="13" font-weight="600" fill="#fff">' + esc(t[0]) + '</text>');
+      s.push('<text x="' + (x + CW - 12) + '" y="' + (y + 22) + '" font-size="11" fill="#dbeafe" text-anchor="end">' + (i + 1) + '/' + stages.length + '</text>');
 
-      s.push('<text x="' + (x + 14) + '" y="' + (TOP + 56) + '" font-size="11.5" fill="#374151">节点 <tspan font-weight="600" fill="#0A3D91">' + ns.length + '</tspan> 个</text>');
-      s.push('<text x="' + (x + 14) + '" y="' + (TOP + 74) + '" font-size="11.5" fill="#374151">角色 <tspan font-weight="600" fill="#0A3D91">' + roles.length + '</tspan> 个</text>');
-      s.push('<text x="' + (x + 14) + '" y="' + (TOP + 92) + '" font-size="11" fill="#6B7280">' + esc(wrap(roles.join('、'), 15)[0] || '—') + '</text>');
-      s.push('<text x="' + (x + 14) + '" y="' + (TOP + 112) + '" font-size="11" fill="' + (sys.length ? '#00A3C4' : '#F5222D') + '">' + esc(wrap(sys.join('、'), 15)[0] || '系统未标注') + '</text>');
-      if (excCount) s.push('<text x="' + (x + CW - 12) + '" y="' + (TOP + 92) + '" font-size="10.5" fill="#F5222D" text-anchor="end">异常 ' + excCount + '</text>');
-      if (feeCount) s.push('<text x="' + (x + CW - 12) + '" y="' + (TOP + 112) + '" font-size="10.5" fill="#FAAD14" text-anchor="end">计费 ' + feeCount + '</text>');
+      s.push('<text x="' + (x + 14) + '" y="' + (y + 56) + '" font-size="11.5" fill="#374151">节点 <tspan font-weight="600" fill="#0A3D91">' + ns.length + '</tspan> 个</text>');
+      s.push('<text x="' + (x + 14) + '" y="' + (y + 74) + '" font-size="11.5" fill="#374151">角色 <tspan font-weight="600" fill="#0A3D91">' + roles.length + '</tspan> 个</text>');
+      s.push('<text x="' + (x + 14) + '" y="' + (y + 92) + '" font-size="11" fill="#6B7280">' + esc(wrap(roles.join('、'), 15)[0] || '—') + '</text>');
+      s.push('<text x="' + (x + 14) + '" y="' + (y + 112) + '" font-size="11" fill="' + (sys.length ? '#00A3C4' : '#F5222D') + '">' + esc(wrap(sys.join('、'), 15)[0] || '系统未标注') + '</text>');
+      if (excCount) s.push('<text x="' + (x + CW - 12) + '" y="' + (y + 92) + '" font-size="10.5" fill="#F5222D" text-anchor="end">异常 ' + excCount + '</text>');
+      if (feeCount) s.push('<text x="' + (x + CW - 12) + '" y="' + (y + 112) + '" font-size="10.5" fill="#FAAD14" text-anchor="end">计费 ' + feeCount + '</text>');
       s.push('</g>');
 
       if (i + 1 < stages.length) {
-        s.push('<path d="M' + (x + CW) + ',' + (TOP + CH / 2) + ' L' + (x + CW + GAP - 4) + ',' + (TOP + CH / 2) +
-          '" stroke="#1668DC" stroke-width="2" fill="none" marker-end="url(#vcw)"/>');
+        if (col + 1 < perRow) {
+          // 同一行：横向箭头
+          s.push('<path d="M' + (x + CW) + ',' + (y + CH / 2) + ' L' + (x + CW + GAP - 4) + ',' + (y + CH / 2) +
+            '" stroke="#1668DC" stroke-width="2" fill="none" marker-end="url(#vcw)"/>');
+        } else {
+          // 行末折到下一行首卡：右伸 → 落到行间隙 → 折回左侧 → 从上方进入
+          var xR = x + CW + 24, yGap = y + CH + ROW_GAP / 2, xC = LEFTX + CW / 2;
+          s.push('<path d="M' + (x + CW) + ',' + (y + CH / 2) + ' H' + xR + ' V' + yGap + ' H' + xC +
+            ' V' + (y + CH + ROW_GAP - 8) + '" stroke="#1668DC" stroke-width="2" fill="none" marker-end="url(#vcw)"/>');
+        }
       }
     });
 
     // 底部：主链路角色参与热力
-    var y2 = TOP + CH + 44;
+    var y2 = Y_LANES;
     s.push('<text x="' + LEFTX + '" y="' + (y2 - 12) + '" font-size="13" font-weight="600" fill="#0A3D91">角色参与分布</text>');
     asset.lanes.forEach(function (l, i) {
-      var cnt = asset.nodes.filter(function (n) { return n.laneId === l.id; }).length;
+      var cnt = laneCounts[i];
       var w = Math.max(40, cnt * 26);
       s.push('<text x="' + LEFTX + '" y="' + (y2 + 18 + i * 24) + '" font-size="11.5" fill="#374151">' + esc(l.name) + '</text>');
       s.push('<rect x="' + (LEFTX + 130) + '" y="' + (y2 + 7 + i * 24) + '" width="' + w + '" height="14" rx="4" fill="#1668DC" opacity="0.75"/>');
