@@ -84,12 +84,16 @@ button, input, select, textarea { font-family: inherit; }
 .app {
   display: grid;
   grid-template-rows: var(--topbar-h) 1fr var(--statusbar-h);
+  /* 必须写 minmax(0,1fr)：默认的单列 auto 轨道会被顶栏的 min-content（约 940px，
+     因为按钮 nowrap）撑宽，于是 .app-main/画布在手机上都按 940px 排版并跑到屏幕外。 */
+  grid-template-columns: minmax(0, 1fr);
   height: 100vh;
 }
 
 .app-main {
   display: grid;
-  grid-template-columns: var(--left-w) 1fr var(--right-w);
+  /* 中列同样写 minmax(0,1fr)，允许画布被压缩到视口宽度（大图靠内部滚动看） */
+  grid-template-columns: var(--left-w) minmax(0, 1fr) var(--right-w);
   min-height: 0;
   gap: 0;
 }
@@ -591,9 +595,30 @@ button, input, select, textarea { font-family: inherit; }
 @media (max-width: 1240px) {
   :root { --left-w: 216px; --right-w: 292px; }
 }
+/* 窄屏 / 手机（含微信内置浏览器）：隐藏左右侧栏，画布独占整屏。
+   注意：display:none 的侧栏不再是 grid item，画布会被自动放进第一列，
+   而第一列宽度是 --left-w（0px）——画布宽度因此为 0，手机上整张图不可见。
+   所以隐藏侧栏的同时必须把 .app-main 改成单列。 */
 @media (max-width: 1024px) {
   :root { --left-w: 0px; --right-w: 0px; }
   .panel-left, .panel-right { display: none; }
+  .app-main { grid-template-columns: minmax(0, 1fr); }
+
+  /* 顶栏/状态栏在窄屏放不下一行：允许横向滑动，保证「一键生成 SOP 文档」等按钮都能点到；
+     滚动条本身不显示（移动端本来就是手势滑动），避免挤掉内容高度。 */
+  .topbar, .statusbar { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
+  .topbar::-webkit-scrollbar, .statusbar::-webkit-scrollbar { height: 0; }
+  .topbar { gap: 10px; padding: 0 10px; }
+  .statusbar { gap: 12px; padding: 0 10px; }
+  .brand-sub { display: none; }                 /* 副标题换行会把 58px 顶栏撑高并被裁切，手机上去掉 */
+  .statusbar .sb { flex: none; white-space: nowrap; }   /* 否则滑动容器里每项被压扁，文字竖排 */
+}
+
+/* 手机竖屏：顶栏只留 LOGO，给操作按钮让位（否则按钮被挤出屏幕） */
+@media (max-width: 620px) {
+  .brand { flex: none; }
+  .brand-txt { display: none; }
+  .topbar-sep { display: none; }
 }
 
 /* 打印（A4） */
