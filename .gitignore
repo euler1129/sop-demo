@@ -1,0 +1,23 @@
+# 冒烟/调试产物
+.out/
+.playwright-cli/
+*.log
+
+# 客户原始抽取产物（含真实客户信息，不进仓库）
+skill/**/raw.json
+raw.json
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 编辑器 / IDE
+.vscode/
+.idea/
+__pycache__/
+*.pyc
+
+# 依赖（本项目无 npm 依赖，vendor 已本地化并需要提交）
+node_modules/
+
+# 注意：dist/ 是交付物（单文件 HTML），必须提交，勿忽略

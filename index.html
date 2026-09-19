@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP 流程资产线上化平台 · 售前演示</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='5' fill='%230A3D91'/%3E%3Cg fill='none' stroke='%23fff' stroke-width='1.8'%3E%3Crect x='4' y='4' width='6' height='6' rx='1.2'/%3E%3Crect x='14' y='4' width='6' height='6' rx='1.2'/%3E%3Crect x='4' y='14' width='6' height='6' rx='1.2'/%3E%3Cpath d='M17 14v6M14 17h6'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= 顶部操作条 ================= -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+          <rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/>
+        </svg>
+      </div>
+      <div class="brand-txt">
+        <div class="brand-title">SOP 流程资产线上化平台</div>
+        <div class="brand-sub">结构化资产 · 自动成图 · BPMN 2.0 · 一键成文</div>
+      </div>
+    </div>
+
+    <div class="topbar-sep"></div>
+
+    <div class="tool-group">
+      <button class="btn" id="btn-import" title="导入 Excel / Visio / Word / PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>导入存量 SOP
+      </button>
+      <button class="btn" id="btn-nl" title="用自然语言描述流程，自动生成图">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>
+        </svg>自然语言建模
+      </button>
+      <button class="btn btn-primary" id="btn-doc" title="由流程图一键生成 SOP 文档">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>
+        </svg>一键生成 SOP 文档
+      </button>
+      <button class="btn" id="btn-version" title="版本快照与节点级对比">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9v3a6 6 0 0 1-6 6H6"/>
+        </svg>版本对比
+      </button>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="tool-group">
+      <div class="mode-pill offline" id="mode-pill" title="点击配置在线大模型">
+        <span class="mode-dot"></span><span id="mode-text">离线规则引擎</span>
+      </div>
+      <button class="btn btn-ghost" id="btn-settings" title="AI 与显示设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.14.36.4.66.74.85.24.13.5.2.77.2H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ================= 三栏主体 ================= -->
+  <div class="app-main">
+
+    <!-- 左：资产面板 -->
+    <aside class="panel-left">
+      <div class="panel-head"><div class="panel-title">流程资产库</div></div>
+      <div class="section">
+        <div class="section-label">内置样例 · 一键加载</div>
+        <div id="sample-list"></div>
+      </div>
+      <div class="section" style="flex:1 1 auto; overflow-y:auto; min-height:0">
+        <div class="section-label">流程架构 L1 ~ Ln</div>
+        <div class="tree" id="asset-tree"></div>
+      </div>
+      <div class="ver-bar">
+        <span>当前版本</span>
+        <span class="status-chip status-draft" id="ver-chip">V1.0 草稿</span>
+        <span class="spacer" style="flex:1"></span>
+        <button class="icon-btn" id="btn-publish" title="提交审核 / 发布">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+        </button>
+      </div>
+    </aside>
+
+    <!-- 中：画布 -->
+    <main class="canvas-wrap">
+      <div class="view-tabs">
+        <div class="vtab active" data-view="swimlane">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16"/></svg>泳道流程图
+        </div>
+        <div class="vtab" data-view="bpmn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="3"/><rect x="11" y="8" width="8" height="8" rx="1"/><path d="M8 12h3"/></svg>BPMN 2.0
+        </div>
+        <div class="vtab" data-view="vc">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="9" width="5" height="6" rx="1"/><rect x="9.5" y="9" width="5" height="6" rx="1"/><rect x="17" y="9" width="5" height="6" rx="1"/><path d="M7 12h2.5M14.5 12H17"/></svg>价值链图
+        </div>
+        <div class="vtab" data-view="table">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14h18M10 4v16"/></svg>资产表格
+        </div>
+        <div class="canvas-tools">
+          <button class="icon-btn" id="btn-zoom-out" title="缩小">−</button>
+          <button class="icon-btn" id="btn-zoom-in" title="放大">+</button>
+          <button class="icon-btn" id="btn-zoom-fit" title="适应窗口">⤢</button>
+          <button class="icon-btn" id="btn-export-svg" title="导出 SVG">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 9 12 4 17 9"/><line x1="12" y1="4" x2="12" y2="16"/></svg>
+          </button>
+          <button class="icon-btn" id="btn-export-png" title="导出 PNG">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+          </button>
+          <button class="icon-btn" id="btn-export-bpmn" title="导出 BPMN 2.0 XML">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="canvas-body" id="canvas-body">
+        <div class="view-pane active" id="pane-swimlane"></div>
+        <div class="view-pane" id="pane-bpmn"></div>
+        <div class="view-pane" id="pane-vc"></div>
+        <div class="view-pane" id="pane-table"></div>
+        <div class="empty-state" id="empty-state">
+          <h3>把散落的 SOP 变成可执行的流程资产</h3>
+          <p>左侧一键加载内置样例，或导入你手上的 Excel / Visio / Word / PDF 存量 SOP。
+             系统会自动解析为结构化资产，生成泳道流程图与标准 BPMN 2.0，并一键输出 SOP 文档。</p>
+          <div class="empty-actions">
+            <button class="btn" id="btn-empty-sample">加载内置样例</button>
+            <button class="btn" id="btn-empty-import">导入我的文件</button>
+          </div>
+        </div>
+        <div class="drop-hint" id="drop-hint">松开鼠标即可导入（支持 .xlsx / .vsdx / .docx / .pdf）</div>
+      </div>
+    </main>
+
+    <!-- 右：属性与诊断 -->
+    <aside class="panel-right">
+      <div class="tabs-mini">
+        <div class="tm active" data-tab="prop">节点属性</div>
+        <div class="tm" data-tab="diag">AI 诊断</div>
+      </div>
+      <div class="panel-scroll" id="pane-prop"></div>
+      <div class="panel-scroll" id="pane-diag" style="display:none"></div>
+    </aside>
+  </div>
+
+  <!-- ================= 状态栏 ================= -->
+  <footer class="statusbar">
+    <span class="sb">节点 <b id="sb-nodes">0</b></span>
+    <span class="sb">连线 <b id="sb-edges">0</b></span>
+    <span class="sb">环节 <b id="sb-stages">0</b></span>
+    <span class="sb">泳道 <b id="sb-lanes">0</b></span>
+    <span class="sb">解析耗时 <b id="sb-ms">0</b> ms</span>
+    <span class="spacer" style="flex:1"></span>
+    <span class="sb">数据源 <b id="sb-source">—</b></span>
+    <span class="sb">运行模式 <b id="sb-mode">单文件（离线）</b></span>
+  </footer>
+</div>
+
+<input type="file" id="file-input" accept=".xlsx,.xls,.xlsm,.csv,.vsdx,.vsdm,.docx,.pdf,.bpmn,.xml" style="display:none">
+
+<!-- ================= 弹窗：导入 ================= -->
+<div class="modal-mask" id="modal-import">
+  <div class="modal" style="width:min(620px,92vw)">
+    <div class="modal-head"><h3>导入存量 SOP</h3></div>
+    <div class="modal-body">
+      <div id="drop-zone" style="border:2px dashed rgba(22,104,220,.5);border-radius:12px;padding:28px;text-align:center;cursor:pointer;background:rgba(22,104,220,.06)">
+        <div style="font-size:15px;font-weight:500;margin-bottom:6px">点击选择文件，或把文件拖到这里</div>
+        <div style="font-size:12px;color:#93A4BD;line-height:1.8">
+          Excel（推荐，字段最完整）· Visio 泳道图 · Word · PDF · BPMN 2.0 XML
+        </div>
+      </div>
+      <div style="margin-top:14px;font-size:12px;color:#93A4BD;line-height:1.9">
+        <b style="color:#cbd5e1">为什么推荐 Excel？</b><br>
+        你的 Excel 模板天然就是节点级元数据（业务环节 / 操作节点 / 操作角色 / 输入 / 输出 / 涉及系统 / 主状态），
+        可 1:1 映射成泳道与 BPMN 活动；而 Visio 只有图形，缺输入输出与系统，导入后会被 AI 诊断标为待补全。
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close>取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 弹窗：自然语言建模 ================= -->
+<div class="modal-mask" id="modal-nl">
+  <div class="modal" style="width:min(720px,92vw)">
+    <div class="modal-head"><h3>自然语言建模</h3></div>
+    <div class="modal-body">
+      <div class="field">
+        <label>用一句话一段的方式描述你的流程</label>
+        <textarea id="nl-text" placeholder="环节：下委托&#10;客户：在系统B（外网协同）提交整柜运输委托，生成T单&#10;运输客服：审核委托并派单给承运方 → 承运方：在系统B（外网协同）接单&#10;承运方：打单换单，获取提还柜纸&#10;环节：派车&#10;承运方：录入车牌司机信息并派车"></textarea>
+        <div class="hint">支持「环节：xxx」声明环节，支持「角色：动作」与 A → B 串行写法。离线规则引擎可直接解析；配置在线大模型后可补齐输入/输出/系统等字段。</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close>取消</button>
+      <button class="btn btn-primary" id="nl-go">生成流程</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 弹窗：SOP 文档 ================= -->
+<div class="modal-mask" id="modal-doc">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>SOP 文档预览</h3>
+      <span class="tag" id="doc-tag">由流程图自动生成</span>
+    </div>
+    <div class="modal-body">
+      <div class="doc-preview" id="doc-preview"></div>
+      <div class="progress" id="doc-progress" style="display:none"><i></i></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close>关闭</button>
+      <button class="btn" id="doc-print">打印 / 导出 PDF</button>
+      <button class="btn btn-primary" id="doc-export">导出 .docx</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 弹窗：版本对比 ================= -->
+<div class="modal-mask" id="modal-version">
+  <div class="modal" style="width:min(760px,94vw)">
+    <div class="modal-head"><h3>版本管理与节点级对比</h3></div>
+    <div class="modal-body">
+      <div class="field">
+        <label>选择对比基准</label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <select id="ver-a" class="field" style="flex:1"></select>
+          <span style="color:#93A4BD">对比</span>
+          <select id="ver-b" class="field" style="flex:1"></select>
+        </div>
+      </div>
+      <div id="ver-result"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close>关闭</button>
+      <button class="btn btn-accent" id="ver-snapshot">保存当前为新版本</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 弹窗：设置 ================= -->
+<div class="modal-mask" id="modal-settings">
+  <div class="modal" style="width:min(640px,92vw)">
+    <div class="modal-head"><h3>设置</h3></div>
+    <div class="modal-body">
+      <div class="field">
+        <label><input type="checkbox" id="cfg-enable" style="width:auto;margin-right:6px">启用在线大模型（可选增强）</label>
+        <div class="hint">默认关闭。关闭时全部能力由本地规则引擎提供，可在信创内网离线部署；开启后用于自然语言建模与优化建议增强。</div>
+      </div>
+      <div class="field"><label>Base URL（OpenAI 兼容）</label><input id="cfg-base" placeholder="https://api.example.com/v1"></div>
+      <div class="field"><label>API Key</label><input id="cfg-key" type="password" placeholder="sk-..."></div>
+      <div class="field"><label>模型</label><input id="cfg-model" placeholder="gpt-4o-mini"></div>
+      <div class="field"><label><input type="checkbox" id="cfg-desens" style="width:auto;margin-right:6px">演示时启用脱敏（客户名/系统名替换为代称）</label>
+        <div class="hint">对外演示或放到公网时建议开启。</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" data-close>取消</button>
+      <button class="btn btn-primary" id="cfg-save">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 依赖（全部本地化，禁止 CDN 外链） ============ -->
+<script src="vendor/jszip.min.js"></script>
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="js/samples/samples-data-safe.js"></script>
+<script src="js/util.js"></script>
+<script src="js/model/process-model.js"></script>
+<script src="js/parser/xlsx-parser.js"></script>
+<script src="js/parser/vsdx-parser.js"></script>
+<script src="js/parser/docx-parser.js"></script>
+<script src="js/parser/pdf-parser.js"></script>
+<script src="js/render/swimlane.js"></script>
+<script src="js/render/bpmn.js"></script>
+<script src="js/render/value-chain.js"></script>
+<script src="js/render/asset-table.js"></script>
+<script src="js/report/sop-doc.js"></script>
+<script src="js/version/diff.js"></script>
+<script src="js/ai/ai-client.js"></script>
+<script src="js/ai/rules.js"></script>
+<script src="js/ai/features.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
