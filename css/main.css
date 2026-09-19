@@ -299,6 +299,36 @@ button, input, select, textarea { font-family: inherit; }
     var(--bg-canvas);
 }
 
+/* 画布是浅底（--bg-canvas），全局那套「白色半透明滑块」铺上去等于隐形，
+   用户会以为内容不可滚动，这里单独换一套深蓝滑块。
+   注意：只能用 ::-webkit-scrollbar——一旦同时写 scrollbar-color/scrollbar-width，
+   Chromium 会退回系统 overlay 滚动条（自动隐藏），又变回「看不见」。
+   Windows 上同时按下「自动隐藏滚动条」的默认设置时，这条尤其关键。 */
+.canvas-body::-webkit-scrollbar { width: 13px; height: 13px; }
+.canvas-body::-webkit-scrollbar-track { background: rgba(15, 58, 120, .07); }
+.canvas-body::-webkit-scrollbar-thumb {
+  background: rgba(15, 58, 120, .45); border-radius: 7px;
+  border: 3px solid transparent; background-clip: content-box;
+}
+.canvas-body::-webkit-scrollbar-thumb:hover { background: rgba(10, 61, 145, .72); background-clip: content-box; }
+.canvas-body::-webkit-scrollbar-corner { background: transparent; }
+
+/* Firefox 没有 ::-webkit-scrollbar，用标准属性兜底 */
+@supports not selector(::-webkit-scrollbar) {
+  .canvas-body { scrollbar-width: auto; scrollbar-color: rgba(15, 58, 120, .45) rgba(15, 58, 120, .07); }
+}
+
+/* 画布操作提示：拖拽/缩放这些操作没有按钮，必须写在界面上才有人用 */
+.canvas-hint {
+  margin-left: 10px; font-size: 11.5px; color: #6b7c93; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+
+/* 拖拽平移：内容溢出时给抓手光标 */
+.canvas-body.pannable { cursor: grab; }
+.canvas-body.panning { cursor: grabbing; }
+.canvas-body.panning * { cursor: grabbing !important; user-select: none; }
+
 .view-pane { display: none; animation: fadeIn .28s ease; }
 .view-pane.active { display: block; }
 

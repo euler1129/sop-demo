@@ -185,6 +185,85 @@
       SOP.render.assetTable(a, pane, { onSelect: selectNode });
     }
     if (state.selected) highlightSelection();
+    updatePannable();
+  }
+
+  /* ---------------- 画布浏览：缩放 / 拖拽平移 ----------------
+     此前只有三个缩放按钮，且「适应窗口」只是把 zoom 设回 1；
+     大图（BPMN 可宽到 5700px）只能靠看不见的滚动条，实际没法看。 */
+  function canvasBody() { return $('canvas-body'); }
+
+  function updatePannable() {
+    var body = canvasBody();
+    if (!body) return;
+    body.classList.toggle('pannable',
+      body.scrollWidth > body.clientWidth + 1 || body.scrollHeight > body.clientHeight + 1);
+  }
+
+  // 缩放后把原来视口中心的那一点留在中心，避免每次缩放都跳回左上角
+  function setZoom(z) {
+    var body = canvasBody();
+    var prevW = body.scrollWidth || 1, prevH = body.scrollHeight || 1;
+    var cx = (body.scrollLeft + body.clientWidth / 2) / prevW;
+    var cy = (body.scrollTop + body.clientHeight / 2) / prevH;
+    state.zoom = Math.max(0.4, Math.min(2, Math.round(z * 100) / 100));
+    renderView(currentAsset());
+    body.scrollLeft = cx * body.scrollWidth - body.clientWidth / 2;
+    body.scrollTop = cy * body.scrollHeight - body.clientHeight / 2;
+  }
+
+  // 适应窗口：按内容真实尺寸算缩放比，整张图一次看全
+  function zoomFit() {
+    var body = canvasBody();
+    setZoom(1);
+    var z = Math.min(body.clientWidth / (body.scrollWidth || 1), body.clientHeight / (body.scrollHeight || 1));
+    setZoom(z * 0.98);
+    body.scrollLeft = 0;
+    body.scrollTop = 0;
+  }
+
+  function enableCanvasPan() {
+    var body = canvasBody();
+    if (!body) return;
+    var dragging = false, sx = 0, sy = 0, sl = 0, st = 0, moved = 0;
+
+    body.addEventListener('mousedown', function (e) {
+      if (e.button !== 0) return;
+      dragging = true; moved = 0;
+      sx = e.clientX; sy = e.clientY;
+      sl = body.scrollLeft; st = body.scrollTop;
+      body.classList.add('panning');
+    });
+    window.addEventListener('mousemove', function (e) {
+      if (!dragging) return;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      moved = Math.max(moved, Math.abs(dx) + Math.abs(dy));
+      if (moved <= 3) return;                    // 3px 内算点击，避免"轻抖一下"就位移
+      body.scrollLeft = sl - dx;
+      body.scrollTop = st - dy;
+    });
+    window.addEventListener('mouseup', function () {
+      if (!dragging) return;
+      dragging = false;
+      body.classList.remove('panning');
+    });
+    // 拖完紧跟的那次 click 要吞掉，否则平移结束会顺手选中一个节点
+    body.addEventListener('click', function (e) {
+      if (moved > 3) { e.stopPropagation(); e.preventDefault(); moved = 0; }
+    }, true);
+
+    // Ctrl/⌘ + 滚轮 = 缩放；Alt + 滚轮 = 横向平移（纵向平移用原生滚轮）
+    body.addEventListener('wheel', function (e) {
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        setZoom(state.zoom + (e.deltaY < 0 ? 0.1 : -0.1));
+      } else if (e.altKey) {
+        e.preventDefault();
+        body.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    window.addEventListener('resize', updatePannable);
   }
 
   function bindNodeClick(pane, mapper) {
@@ -308,7 +387,10 @@
   function switchView(v) {
     state.view = v;
     document.querySelectorAll('.vtab').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-view') === v); });
-    if (state.asset) renderView(currentAsset());
+    if (!state.asset) return;
+    renderView(currentAsset());
+    canvasBody().scrollLeft = 0;                 // 换视图回到左上角，避免停在上一张图的偏移上
+    canvasBody().scrollTop = 0;
   }
 
   /* ---------------- 导入 ---------------- */
@@ -505,9 +587,9 @@
       renderAll();
     });
 
-    $('btn-zoom-in').addEventListener('click', function () { state.zoom = Math.min(2, state.zoom + 0.1); renderView(currentAsset()); });
-    $('btn-zoom-out').addEventListener('click', function () { state.zoom = Math.max(0.4, state.zoom - 0.1); renderView(currentAsset()); });
-    $('btn-zoom-fit').addEventListener('click', function () { state.zoom = 1; renderView(currentAsset()); });
+    $('btn-zoom-in').addEventListener('click', function () { setZoom(state.zoom + 0.1); });
+    $('btn-zoom-out').addEventListener('click', function () { setZoom(state.zoom - 0.1); });
+    $('btn-zoom-fit').addEventListener('click', zoomFit);
     $('btn-export-svg').addEventListener('click', exportSvg);
     $('btn-export-png').addEventListener('click', exportPng);
     $('btn-export-bpmn').addEventListener('click', exportBpmn);
@@ -594,6 +676,7 @@
     state.samples = (window.SOP_SAMPLES && window.SOP_SAMPLES.items) || [];
     renderSampleList();
     bind();
+    enableCanvasPan();
     syncMode();
     if (state.samples.length) loadSample(state.samples[0].id);
   }
